@@ -36,6 +36,18 @@ export function FlagGame() {
 
   const maxSeconds = DIFFICULTY_CONFIG[difficulty].time;
 
+  const handleHint = useCallback(async (countryName: string) => {
+    setHintLoading(true);
+    try {
+      const result = await educationalHintGeneration({ countryName });
+      setHint(result.hint);
+    } catch (error) {
+      setHint("This country has a unique history and vibrant culture.");
+    } finally {
+      setHintLoading(false);
+    }
+  }, []);
+
   const generateQuestion = useCallback(() => {
     if (usedIndices.size >= countries.length) {
       setGameState('finished');
@@ -71,6 +83,13 @@ export function FlagGame() {
     });
   }, [usedIndices, difficulty]);
 
+  // Automatically fetch hint when a new question is generated
+  useEffect(() => {
+    if (currentCountry && gameState === 'playing' && !hint && !hintLoading) {
+      handleHint(currentCountry.name);
+    }
+  }, [currentCountry, gameState, hint, hintLoading, handleHint]);
+
   useEffect(() => {
     if (gameState === 'playing' && timeLeft > 0) {
       timerRef.current = setInterval(() => {
@@ -96,19 +115,6 @@ export function FlagGame() {
 
     if (answer === currentCountry?.name) {
       setScore(prev => prev + 1);
-    }
-  };
-
-  const handleHint = async () => {
-    if (!currentCountry || hint || hintLoading) return;
-    setHintLoading(true);
-    try {
-      const result = await educationalHintGeneration({ countryName: currentCountry.name });
-      setHint(result.hint);
-    } catch (error) {
-      setHint("This country has a unique history and vibrant culture.");
-    } finally {
-      setHintLoading(false);
     }
   };
 
@@ -168,7 +174,7 @@ export function FlagGame() {
           value={difficulty} 
           onValueChange={(v) => {
             setDifficulty(v as Difficulty);
-            setUsedIndices(new Set()); // Restart session when difficulty changes
+            setUsedIndices(new Set()); 
             restartGame();
           }}
           className="w-full md:w-auto"
@@ -203,7 +209,7 @@ export function FlagGame() {
           <HintBox 
             hint={hint} 
             loading={hintLoading} 
-            onGetHint={handleHint} 
+            onGetHint={() => currentCountry && handleHint(currentCountry.name)} 
             disabled={gameState !== 'playing'} 
           />
 
@@ -219,7 +225,6 @@ export function FlagGame() {
                 else if (isSelected) buttonStyle = cn(buttonStyle, "bg-destructive text-destructive-foreground opacity-80 ring-4 ring-destructive/20");
                 else buttonStyle = cn(buttonStyle, "opacity-40 text-foreground");
               } else {
-                // Default playing state text color - Purple shade using secondary-foreground
                 buttonStyle = cn(buttonStyle, "text-secondary-foreground hover:bg-secondary/20");
               }
 
