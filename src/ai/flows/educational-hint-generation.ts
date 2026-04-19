@@ -21,7 +21,7 @@ export type EducationalHintGenerationInput = z.infer<
 
 const EducationalHintGenerationOutputSchema = z.object({
   hint: z.string().describe("An educational hint about the country focused on landmarks and food."),
-  rewardSentence: z.string().describe("The final combined reward sentence starting with the selected opener and followed by the romantic date activity."),
+  rewardSentence: z.string().describe("The final combined reward sentence starting with one of the provided playful openers followed by a romantic date activity."),
 });
 export type EducationalHintGenerationOutput = z.infer<
   typeof EducationalHintGenerationOutputSchema
@@ -67,7 +67,7 @@ Your goal is to provide two things for the country named {{{countryName}}}:
 
 1. A rich hint about the country without directly revealing its name. Focus on identifiable landmarks and world-famous cuisine. 
 
-2. A "rewardSentence". This MUST be a combination of a "Playful Praise" opener followed by a "Unique Dream Date" activity.
+2. A "rewardSentence". This MUST be a combination of exactly ONE of the playful openers from the list below, followed immediately by a unique, country-specific, deeply romantic "Dream Date" activity.
 
 OPENER LIST (Pick one at random and use it exactly):
 - Correct… looks like you’re winning AND planning our date 😏✈️
@@ -121,11 +121,9 @@ OPENER LIST (Pick one at random and use it exactly):
 - You got it… looks like we’re going on a trip soon 😏🌎
 - Correct! Careful… I might not let you travel without me 😄❤️
 
-After selecting an opener, append a "Unique Dream Date" activity specifically for {{{countryName}}}. This part must be unique, deeply romantic, and tailored to the country's most famous or romantic features.
+After selecting an opener, append a "Unique Dream Date" activity specifically for {{{countryName}}}. This part must be unique, deeply romantic, and tailored to the country's most famous or romantic features (e.g., food, landmarks, experiences). 
 
-Example: "Correct! Looks like I found my travel partner 😉✈️ Let's share a sunset kiss at the top of the Eiffel Tower as the city lights twinkle below us! 💋🗼✨"
-
-The final rewardSentence must feel intimate and adventurous. DO NOT use generic fallbacks like "let's go explore". Be specific.
+DO NOT use generic fallbacks like "let's go explore". Be specific and vivid. The final sentence must feel intimate, playful, and adventurous.
 
 Hint and reward for {{{countryName}}}:`,
 });
