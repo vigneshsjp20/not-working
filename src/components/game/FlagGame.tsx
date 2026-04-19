@@ -15,9 +15,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 type Difficulty = 'easy' | 'medium' | 'hard';
 
 const DIFFICULTY_CONFIG = {
-  easy: { time: 15, label: 'Easy', icon: Shield, color: 'text-green-500' },
-  medium: { time: 10, label: 'Medium', icon: Zap, color: 'text-amber-500' },
-  hard: { time: 5, label: 'Hard', icon: Flame, color: 'text-destructive' },
+  easy: { time: 25, label: 'Easy', icon: Shield, color: 'text-green-500' },
+  medium: { time: 20, label: 'Medium', icon: Zap, color: 'text-amber-500' },
+  hard: { time: 10, label: 'Hard', icon: Flame, color: 'text-destructive' },
 };
 
 export function FlagGame() {
@@ -212,15 +212,15 @@ export function FlagGame() {
               const isCorrect = option === currentCountry?.name;
               const isSelected = option === selectedAnswer;
               
-              let buttonStyle = "glass-dark hover:bg-white/60 border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl transition-all active:scale-95 text-foreground";
+              let buttonStyle = "glass-dark hover:bg-white/60 border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl transition-all active:scale-95";
               
               if (gameState === 'answered') {
-                if (isCorrect) buttonStyle = "bg-primary text-primary-foreground border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl ring-4 ring-primary/20";
-                else if (isSelected) buttonStyle = "bg-destructive text-destructive-foreground border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl opacity-80 ring-4 ring-destructive/20";
-                else buttonStyle = "glass-dark border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl opacity-40 text-foreground";
+                if (isCorrect) buttonStyle = cn(buttonStyle, "bg-primary text-primary-foreground ring-4 ring-primary/20");
+                else if (isSelected) buttonStyle = cn(buttonStyle, "bg-destructive text-destructive-foreground opacity-80 ring-4 ring-destructive/20");
+                else buttonStyle = cn(buttonStyle, "opacity-40 text-foreground");
               } else {
-                // Default playing state text color
-                buttonStyle = cn(buttonStyle, "text-primary hover:text-primary-foreground");
+                // Default playing state text color - Purple shade using secondary-foreground
+                buttonStyle = cn(buttonStyle, "text-secondary-foreground hover:bg-secondary/20");
               }
 
               return (
