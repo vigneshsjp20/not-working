@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { countries } from "@/data/countries";
 import { FlagCard } from "./FlagCard";
 import { Timer } from "./Timer";
@@ -9,32 +9,38 @@ import { HintBox } from "./HintBox";
 import { Button } from "@/components/ui/button";
 import { educationalHintGeneration } from "@/ai/flows/educational-hint-generation";
 import { cn } from "@/lib/utils";
-import { RefreshCw, MapPin, CheckCircle2, XCircle, Zap, Shield, Flame } from "lucide-react";
+import { RefreshCw, MapPin, CheckCircle2, XCircle, Zap, Shield, Flame, Play } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 
 const DIFFICULTY_CONFIG = {
-  easy: { time: 25, label: 'Easy', icon: Shield, color: 'text-green-500' },
-  medium: { time: 20, label: 'Medium', icon: Zap, color: 'text-amber-500' },
-  hard: { time: 10, label: 'Hard', icon: Flame, color: 'text-destructive' },
+  easy: { time: 25, label: 'Easy', icon: Shield, color: 'text-green-500', level: 1 },
+  medium: { time: 20, label: 'Medium', icon: Zap, color: 'text-amber-500', level: 2 },
+  hard: { time: 10, label: 'Hard', icon: Flame, color: 'text-destructive', level: 3 },
 };
 
 export function FlagGame() {
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [currentCountry, setCurrentCountry] = useState<typeof countries[0] | null>(null);
   const [options, setOptions] = useState<string[]>([]);
-  const [gameState, setGameState] = useState<'playing' | 'answered' | 'finished'>('playing');
+  const [gameState, setGameState] = useState<'idle' | 'playing' | 'answered' | 'finished'>('idle');
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [timeLeft, setTimeLeft] = useState(DIFFICULTY_CONFIG.medium.time);
   const [hint, setHint] = useState<string | null>(null);
   const [hintLoading, setHintLoading] = useState(false);
-  const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
+  const [usedIndices, setUsedIndices] = useState<Set<string>>(new Set());
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const maxSeconds = DIFFICULTY_CONFIG[difficulty].time;
+
+  // Filter countries based on difficulty level
+  const filteredCountries = useMemo(() => {
+    const level = DIFFICULTY_CONFIG[difficulty].level;
+    return countries.filter(c => c.difficulty === level);
+  }, [difficulty]);
 
   const handleHint = useCallback(async (countryName: string) => {
     setHintLoading(true);
@@ -49,17 +55,16 @@ export function FlagGame() {
   }, []);
 
   const generateQuestion = useCallback(() => {
-    if (usedIndices.size >= countries.length) {
+    // If we've run out of countries for this difficulty, finish
+    if (usedIndices.size >= filteredCountries.length) {
       setGameState('finished');
       return;
     }
 
-    let randomIndex;
-    do {
-      randomIndex = Math.floor(Math.random() * countries.length);
-    } while (usedIndices.has(randomIndex));
-
-    const country = countries[randomIndex];
+    let availableCountries = filteredCountries.filter(c => !usedIndices.has(c.code));
+    
+    const country = availableCountries[Math.floor(Math.random() * availableCountries.length)];
+    
     const otherOptions: string[] = [];
     while (otherOptions.length < 3) {
       const opt = countries[Math.floor(Math.random() * countries.length)].name;
@@ -78,10 +83,17 @@ export function FlagGame() {
     setHint(null);
     setUsedIndices(prev => {
       const next = new Set(prev);
-      next.add(randomIndex);
+      next.add(country.code);
       return next;
     });
-  }, [usedIndices, difficulty]);
+  }, [usedIndices, difficulty, filteredCountries]);
+
+  const startGame = () => {
+    setScore(0);
+    setTotalQuestions(0);
+    setUsedIndices(new Set());
+    generateQuestion();
+  };
 
   // Automatically fetch hint when a new question is generated
   useEffect(() => {
@@ -119,20 +131,59 @@ export function FlagGame() {
   };
 
   const restartGame = () => {
+    setGameState('idle');
+    setUsedIndices(new Set());
     setScore(0);
     setTotalQuestions(0);
-    setUsedIndices(new Set());
-    setGameState('playing');
-    generateQuestion();
   };
 
-  useEffect(() => {
-    if (!currentCountry && usedIndices.size === 0) {
-      generateQuestion();
-    }
-  }, [generateQuestion, currentCountry, usedIndices.size]);
+  if (gameState === 'idle') {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 glass max-w-lg mx-auto rounded-3xl animate-in zoom-in-95">
+        <div className="mb-8 text-center">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-primary/20">
+            <MapPin className="h-10 w-10 text-primary" />
+          </div>
+          <h2 className="text-3xl font-black mb-2">Ready to Explore?</h2>
+          <p className="text-muted-foreground">Select your difficulty and begin your global journey.</p>
+        </div>
 
-  if (!currentCountry && gameState !== 'finished') return null;
+        <div className="w-full space-y-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Challenge Level</label>
+            <Tabs 
+              value={difficulty} 
+              onValueChange={(v) => setDifficulty(v as Difficulty)}
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-3 glass-dark p-1 rounded-xl h-14">
+                {(Object.entries(DIFFICULTY_CONFIG) as [Difficulty, typeof DIFFICULTY_CONFIG['easy']][]).map(([key, config]) => (
+                  <TabsTrigger key={key} value={key} className="text-xs font-bold rounded-lg data-[state=active]:bg-white/80 h-full">
+                    <div className="flex flex-col items-center gap-1">
+                      <config.icon className={cn("h-4 w-4", config.color)} />
+                      <span>{config.label}</span>
+                    </div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <div className="bg-secondary/10 p-4 rounded-2xl border border-secondary/20">
+            <p className="text-xs font-medium text-secondary-foreground text-center italic">
+              {difficulty === 'easy' && "Famous & recognizable world flags (25s per flag)"}
+              {difficulty === 'medium' && "A balanced mix of global nations (20s per flag)"}
+              {difficulty === 'hard' && "Rare flags and smaller nations (10s per flag)"}
+            </p>
+          </div>
+
+          <Button onClick={startGame} className="w-full py-8 text-lg font-black rounded-2xl shadow-xl hover:scale-[1.02] transition-transform bg-primary text-primary-foreground">
+            <Play className="mr-2 h-6 w-6 fill-current" /> START QUEST
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (gameState === 'finished') {
     return (
@@ -142,7 +193,7 @@ export function FlagGame() {
           <CheckCircle2 className="h-20 w-20 text-primary relative z-10" />
         </div>
         <h2 className="text-3xl font-black mb-2 text-center">Quest Complete!</h2>
-        <p className="text-muted-foreground mb-8 text-center">You mastered {score} out of {totalQuestions} flags. You're becoming a true Global Explorer!</p>
+        <p className="text-muted-foreground mb-8 text-center">You mastered {score} out of {totalQuestions} flags on {DIFFICULTY_CONFIG[difficulty].label} mode.</p>
         
         <div className="grid grid-cols-2 gap-4 w-full mb-8">
           <div className="glass-dark p-4 rounded-2xl text-center">
@@ -156,7 +207,7 @@ export function FlagGame() {
         </div>
 
         <Button onClick={restartGame} className="w-full py-8 text-lg font-black rounded-2xl shadow-xl hover:scale-[1.02] transition-transform">
-          <RefreshCw className="mr-2 h-5 w-5" /> RESTART QUEST
+          <RefreshCw className="mr-2 h-5 w-5" /> NEW QUEST
         </Button>
       </div>
     );
@@ -168,27 +219,11 @@ export function FlagGame() {
         <div className="flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-black tracking-tighter uppercase">FlagMaster Quest</h1>
+          <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full border", DIFFICULTY_CONFIG[difficulty].color, "border-current")}>
+            {DIFFICULTY_CONFIG[difficulty].label}
+          </span>
         </div>
         
-        <Tabs 
-          value={difficulty} 
-          onValueChange={(v) => {
-            setDifficulty(v as Difficulty);
-            setUsedIndices(new Set()); 
-            restartGame();
-          }}
-          className="w-full md:w-auto"
-        >
-          <TabsList className="grid grid-cols-3 glass-dark p-1 rounded-xl">
-            {(Object.entries(DIFFICULTY_CONFIG) as [Difficulty, typeof DIFFICULTY_CONFIG['easy']][]).map(([key, config]) => (
-              <TabsTrigger key={key} value={key} className="text-xs font-bold rounded-lg data-[state=active]:bg-white/80">
-                <config.icon className={cn("h-3 w-3 mr-1", config.color)} />
-                {config.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-
         <ScoreBoard score={score} total={totalQuestions} />
       </div>
 
@@ -218,14 +253,12 @@ export function FlagGame() {
               const isCorrect = option === currentCountry?.name;
               const isSelected = option === selectedAnswer;
               
-              let buttonStyle = "glass-dark hover:bg-white/60 border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl transition-all active:scale-95";
+              let buttonStyle = "glass-dark hover:bg-white/60 border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl transition-all active:scale-95 text-secondary-foreground";
               
               if (gameState === 'answered') {
                 if (isCorrect) buttonStyle = cn(buttonStyle, "bg-primary text-primary-foreground ring-4 ring-primary/20");
                 else if (isSelected) buttonStyle = cn(buttonStyle, "bg-destructive text-destructive-foreground opacity-80 ring-4 ring-destructive/20");
                 else buttonStyle = cn(buttonStyle, "opacity-40 text-foreground");
-              } else {
-                buttonStyle = cn(buttonStyle, "text-secondary-foreground hover:bg-secondary/20");
               }
 
               return (
@@ -258,3 +291,4 @@ export function FlagGame() {
     </div>
   );
 }
+
