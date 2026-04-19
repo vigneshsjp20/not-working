@@ -36,7 +36,6 @@ export function FlagGame() {
 
   const maxSeconds = DIFFICULTY_CONFIG[difficulty].time;
 
-  // Filter countries based on difficulty level
   const filteredCountries = useMemo(() => {
     const level = DIFFICULTY_CONFIG[difficulty].level;
     return countries.filter(c => c.difficulty === level);
@@ -55,7 +54,6 @@ export function FlagGame() {
   }, []);
 
   const generateQuestion = useCallback(() => {
-    // If we've run out of countries for this difficulty, finish
     if (usedIndices.size >= filteredCountries.length) {
       setGameState('finished');
       return;
@@ -95,7 +93,6 @@ export function FlagGame() {
     generateQuestion();
   };
 
-  // Automatically fetch hint when a new question is generated
   useEffect(() => {
     if (currentCountry && gameState === 'playing' && !hint && !hintLoading) {
       handleHint(currentCountry.name);
@@ -145,7 +142,7 @@ export function FlagGame() {
             <MapPin className="h-10 w-10 text-primary" />
           </div>
           <h2 className="text-3xl font-black mb-2">Ready to Explore?</h2>
-          <p className="text-muted-foreground">Select your difficulty and begin your global journey.</p>
+          <p className="text-muted-foreground">Let’s travel the world together, one flag at a time Ree🌍❤️</p>
         </div>
 
         <div className="w-full space-y-6">
@@ -291,4 +288,3 @@ export function FlagGame() {
     </div>
   );
 }
-
