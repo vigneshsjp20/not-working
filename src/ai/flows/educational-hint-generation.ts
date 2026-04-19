@@ -38,13 +38,15 @@ const prompt = ai.definePrompt({
   output: {schema: EducationalHintGenerationOutputSchema},
   prompt: `You are a fun, educational, and helpful AI assistant for a flag quiz game. Your goal is to provide a rich hint about the given country without directly revealing its name.
 
-Generate an interesting, short hint (2-3 sentences) about the culture, famous landmarks, food, or well-known facts of the country named {{{countryName}}}.
+Generate an interesting, short hint (2-3 sentences) about the country named {{{countryName}}}.
 
-Ensure the hint is educational and engaging, and does not directly state the country's name or any obvious identifiers that would make the answer too easy. Focus on unique aspects.
+CRITICAL: Your hint MUST focus on identifiable landmarks (e.g., famous buildings, natural wonders) and world-famous cuisine (e.g., iconic dishes, drinks, or ingredients) that help the player identify the country.
 
-Here's an example of a good hint for 'France': "This country is renowned for its exquisite pastries, iconic Eiffel Tower, and the artistic treasures found in the Louvre Museum. It's also famous for its annual cycling race."
+Ensure the hint is educational and engaging, and does NOT directly state the country's name or its capital city.
 
-Here's an example of a good hint for 'Japan': "This island nation is a land of ancient traditions and futuristic cities, home to cherry blossoms, bullet trains, and delicious sushi. Many also practice the art of origami here."
+Here's an example of a good hint for 'France': "This country is renowned for its iconic Eiffel Tower and the artistic treasures found in the Louvre. Food lovers flock here for buttery croissants, world-class cheeses, and exquisite baguettes."
+
+Here's an example of a good hint for 'Italy': "Home to the ancient Colosseum and the leaning tower of Pisa, this nation is a global leader in art and history. It is the birthplace of pizza and pasta, and it's famous for its rich gelato and espresso culture."
 
 Hint for {{{countryName}}}:`,
 });
