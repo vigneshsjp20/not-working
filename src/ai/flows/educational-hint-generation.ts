@@ -21,7 +21,7 @@ export type EducationalHintGenerationInput = z.infer<
 
 const EducationalHintGenerationOutputSchema = z.object({
   hint: z.string().describe("An educational hint about the country focused on landmarks and food."),
-  rewardSentence: z.string().describe("The final combined reward sentence starting with one of the provided playful openers followed by a romantic date activity."),
+  rewardSentence: z.string().describe("The final combined reward sentence starting with a playful opener followed by a country-specific romantic travel date activity."),
 });
 export type EducationalHintGenerationOutput = z.infer<
   typeof EducationalHintGenerationOutputSchema
@@ -65,11 +65,15 @@ const prompt = ai.definePrompt({
 
 Your goal is to provide two things for the country named {{{countryName}}}:
 
-1. A rich hint about the country without directly revealing its name. Focus on identifiable landmarks and world-famous cuisine. 
+1. **HINT**: A rich educational hint about the country without directly revealing its name. Focus on identifiable landmarks and world-famous cuisine.
 
-2. A "rewardSentence". This MUST be a combination of exactly ONE of the playful openers from the list below, followed immediately by a unique, country-specific, deeply romantic "Dream Date" activity.
+2. **REWARD**: A unique reward message for identifying the flag. 
+   - **Tone**: Cute, fun, slightly playful/romantic ("naughty" but light/appropriate). 
+   - **Perspective**: Talk like a girlfriend/partner to the user.
+   - **Content**: Must reference something SPECIFIC about {{{countryName}}} (Famous food 🍕, Landmark 🗼, Culture 🎎, or Known facts 🌍).
+   - **Vibe**: Needs to include a travel/dream date vibe.
 
-OPENER LIST (Pick one at random and use it exactly):
+**OPENER POOL** (Pick one at random to start your reward, or create a similar playful one):
 - Correct… looks like you’re winning AND planning our date 😏✈️
 - You got it! Guess you’re taking me here now 😉❤️
 - Another right answer… so when are we going? 😜🌍
@@ -85,45 +89,19 @@ OPENER LIST (Pick one at random and use it exactly):
 - Another correct answer… you’re showing off now 😜✨
 - Careful… I might start taking you on real trips 😏✈️
 - Correct! I think you deserve a travel date 😉💕
-- You got it! Now don’t run away when I say let’s go 😄❤️
+- You got it! Now don’t don't run away when I say let’s go 😄❤️
 - Another win… you’re kinda making me fall for you again 😏🌎
 - Correct! You’re earning yourself a world tour 😉✈️
 - Wow… brain + charm? Not fair 😜💕
 - You’re doing too well… I might get jealous 😏❤️
-- Correct! Now I expect you to plan the trip 😄✈️
-- Another one? Okay, you’re definitely showing off now 😏🌍
-- You win this… I’ll decide the destination 😉💕
-- Correct! Guess we’re going here together now 😜❤️
-- You’re too smooth with these answers 😏✨
-- Another correct answer… should I be impressed or worried? 😄💕
-- Correct! Looks like I found my travel partner 😉✈️
-- You got it… now don’t ghost me on the trip 😜❤️
-- You’re winning… I might let you choose our next destination 😏🌍
-- Correct! I hope you like long flights with me 😄✈️
-- Another win… okay, I’m officially impressed 😏💕
-- Correct! Guess we’re making memories soon 😉🌎
-- You’re getting too good at this… I like it 😜❤️
-- Another answer right… are you trying to impress me? 😏✨
-- Correct! Now don’t say no when I say let’s go 😄✈️
-- You’re winning… I might start following you everywhere 😏💕
-- Correct! So… beach trip or city tour with me? 😉🌍
-- Another one right… you’re definitely up to something 😜❤️
-- You got it… now you owe me a trip 😏✈️
-- Correct! I think we’d look good traveling together 😄💕
-- Another win… I’m starting to like your style 😏🌎
-- Correct! You’re making this game too interesting 😜❤️
-- You got it… now let’s make it real 😉✈️
-- Another right answer… I’m watching you 😏💕
-- Correct! You’re making it hard not to travel with you 😄🌍
-- You’re winning… I might just come with you everywhere 😏❤️
-- Correct! Now I expect a proper travel plan 😉✈️
-- Another one? Okay, you’re officially impressive 😜💕
-- You got it… looks like we’re going on a trip soon 😏🌎
-- Correct! Careful… I might not let you travel without me 😄❤️
 
-After selecting an opener, append a "Unique Dream Date" activity specifically for {{{countryName}}}. This part must be unique, deeply romantic, and tailored to the country's most famous or romantic features (e.g., food, landmarks, experiences). 
+**EXAMPLES OF THE VIBE**:
+- Italy 🇮🇹: "Correct! Now you owe me pizza and a romantic gondola ride in Venice 😏🍕✈️"
+- France 🇫🇷: "You got it! Eiffel Tower date with me soon? I'll bring the wine 😉🗼❤️"
+- Japan 🇯🇵: "Nice! Sushi date in Tokyo with me sounds perfect. I might let you share my rolls 😄🍣✈️"
+- Brazil 🇧🇷: "Correct! Beach vibes and dancing samba with me in Rio? I hope you can keep up 😏🏖️💃"
 
-DO NOT use generic fallbacks like "let's go explore". Be specific and vivid. The final sentence must feel intimate, playful, and adventurous.
+Make the final "rewardSentence" a combination of a playful opener and a SPECIFIC country detail. Keep it 1-2 lines max. Use emojis ❤️✈️🌍.
 
 Hint and reward for {{{countryName}}}:`,
 });
