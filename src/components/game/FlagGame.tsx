@@ -9,7 +9,7 @@ import { HintBox } from "./HintBox";
 import { Button } from "@/components/ui/button";
 import { educationalHintGeneration } from "@/ai/flows/educational-hint-generation";
 import { cn } from "@/lib/utils";
-import { RefreshCw, MapPin, CheckCircle2, XCircle, Zap, Shield, Flame, Play } from "lucide-react";
+import { RefreshCw, MapPin, CheckCircle2, XCircle, Zap, Shield, Flame, Play, Heart } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -30,6 +30,7 @@ export function FlagGame() {
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [timeLeft, setTimeLeft] = useState(DIFFICULTY_CONFIG.medium.time);
   const [hint, setHint] = useState<string | null>(null);
+  const [reward, setReward] = useState<string | null>(null);
   const [hintLoading, setHintLoading] = useState(false);
   const [usedIndices, setUsedIndices] = useState<Set<string>>(new Set());
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -46,8 +47,10 @@ export function FlagGame() {
     try {
       const result = await educationalHintGeneration({ countryName });
       setHint(result.hint);
+      setReward(result.rewardSentence);
     } catch (error) {
       setHint("This country has a unique history and vibrant culture.");
+      setReward("Let's go explore this beautiful place together! ❤️");
     } finally {
       setHintLoading(false);
     }
@@ -79,6 +82,7 @@ export function FlagGame() {
     setSelectedAnswer(null);
     setTimeLeft(DIFFICULTY_CONFIG[difficulty].time);
     setHint(null);
+    setReward(null);
     setUsedIndices(prev => {
       const next = new Set(prev);
       next.add(country.code);
@@ -250,7 +254,7 @@ export function FlagGame() {
               const isCorrect = option === currentCountry?.name;
               const isSelected = option === selectedAnswer;
               
-              let buttonStyle = "glass-dark hover:bg-white/60 border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl transition-all active:scale-95 text-secondary-foreground";
+              let buttonStyle = "glass-dark hover:bg-white/60 border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl transition-all active:scale-95 text-[#9333ea]";
               
               if (gameState === 'answered') {
                 if (isCorrect) buttonStyle = cn(buttonStyle, "bg-primary text-primary-foreground ring-4 ring-primary/20");
@@ -276,12 +280,26 @@ export function FlagGame() {
           </div>
 
           {gameState === 'answered' && (
-            <Button 
-              onClick={generateQuestion} 
-              className="w-full bg-accent text-accent-foreground hover:bg-accent/80 py-6 font-black rounded-2xl shadow-lg mt-4 animate-in slide-in-from-bottom-2"
-            >
-              NEXT CHALLENGE
-            </Button>
+            <div className="space-y-4 animate-in slide-in-from-bottom-2">
+              {selectedAnswer === currentCountry?.name && reward && (
+                <div className="p-5 glass border-primary/30 bg-primary/5 rounded-2xl text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-primary">
+                    <Heart className="h-4 w-4 fill-current" />
+                    <span className="text-xs font-black uppercase tracking-widest">Adventure Reward</span>
+                    <Heart className="h-4 w-4 fill-current" />
+                  </div>
+                  <p className="text-sm font-bold italic text-foreground">
+                    &ldquo;{reward}&rdquo;
+                  </p>
+                </div>
+              )}
+              <Button 
+                onClick={generateQuestion} 
+                className="w-full bg-accent text-accent-foreground hover:bg-accent/80 py-6 font-black rounded-2xl shadow-lg"
+              >
+                NEXT CHALLENGE
+              </Button>
+            </div>
           )}
         </div>
       </div>

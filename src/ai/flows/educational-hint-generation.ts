@@ -1,10 +1,10 @@
 'use server';
 /**
- * @fileOverview An AI agent that generates educational hints about a country.
+ * @fileOverview An AI agent that generates educational hints and fun rewards about a country.
  *
- * - educationalHintGeneration - A function that handles the educational hint generation process.
- * - EducationalHintGenerationInput - The input type for the educationalHintGeneration function.
- * - EducationalHintGenerationOutput - The return type for the educationalHintGeneration function.
+ * - educationalHintGeneration - A function that handles the generation process.
+ * - EducationalHintGenerationInput - The input type for the function.
+ * - EducationalHintGenerationOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -13,7 +13,7 @@ import {z} from 'genkit';
 const EducationalHintGenerationInputSchema = z.object({
   countryName: z
     .string()
-    .describe("The name of the country for which to generate a hint."),
+    .describe("The name of the country for which to generate content."),
 });
 export type EducationalHintGenerationInput = z.infer<
   typeof EducationalHintGenerationInputSchema
@@ -21,6 +21,7 @@ export type EducationalHintGenerationInput = z.infer<
 
 const EducationalHintGenerationOutputSchema = z.object({
   hint: z.string().describe("An educational hint about the country."),
+  rewardSentence: z.string().describe("A fun, playful reward sentence for getting the answer right, written in a personal 'we' style."),
 });
 export type EducationalHintGenerationOutput = z.infer<
   typeof EducationalHintGenerationOutputSchema
@@ -36,19 +37,22 @@ const prompt = ai.definePrompt({
   name: 'educationalHintGenerationPrompt',
   input: {schema: EducationalHintGenerationInputSchema},
   output: {schema: EducationalHintGenerationOutputSchema},
-  prompt: `You are a fun, educational, and helpful AI assistant for a flag quiz game. Your goal is to provide a rich hint about the given country without directly revealing its name.
+  prompt: `You are a fun, educational, and helpful AI assistant for a flag quiz game. 
 
-Generate an interesting, short hint (2-3 sentences) about the country named {{{countryName}}}.
+Your goal is to provide two things for the country named {{{countryName}}}:
 
-CRITICAL: Your hint MUST focus on identifiable landmarks (e.g., famous buildings, natural wonders) and world-famous cuisine (e.g., iconic dishes, drinks, or ingredients) that help the player identify the country.
+1. A rich hint about the country without directly revealing its name. Focus on identifiable landmarks and world-famous cuisine. 
+   - Good hint example: "This country is renowned for its iconic Eiffel Tower and the artistic treasures found in the Louvre. Food lovers flock here for buttery croissants and world-class cheeses."
 
-Ensure the hint is educational and engaging, and does NOT directly state the country's name or its capital city.
+2. A "rewardSentence". This is a short, playful, and romantic or fun sentence (1 sentence) suggesting an activity for "us" (the user and the AI/partner) to do there. 
+   - Examples of rewardSentence:
+     - "In this place we will eat the most delicious authentic street food together! 🌮"
+     - "This beautiful spot is perfect for us to share a romantic kiss at sunset! 💋"
+     - "We'll spend all day wandering through these ancient streets holding hands! 🏛️"
 
-Here's an example of a good hint for 'France': "This country is renowned for its iconic Eiffel Tower and the artistic treasures found in the Louvre. Food lovers flock here for buttery croissants, world-class cheeses, and exquisite baguettes."
+CRITICAL: The hint must NOT state the country name. The rewardSentence SHOULD sound personal and fun.
 
-Here's an example of a good hint for 'Italy': "Home to the ancient Colosseum and the leaning tower of Pisa, this nation is a global leader in art and history. It is the birthplace of pizza and pasta, and it's famous for its rich gelato and espresso culture."
-
-Hint for {{{countryName}}}:`,
+Hint and reward for {{{countryName}}}:`,
 });
 
 const educationalHintGenerationFlow = ai.defineFlow(
