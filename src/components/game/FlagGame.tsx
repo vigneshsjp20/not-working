@@ -9,27 +9,32 @@ import { HintBox } from "./HintBox";
 import { Button } from "@/components/ui/button";
 import { educationalHintGeneration } from "@/ai/flows/educational-hint-generation";
 import { cn } from "@/lib/utils";
-import { RefreshCw, MapPin, CheckCircle2, XCircle } from "lucide-react";
+import { RefreshCw, MapPin, CheckCircle2, XCircle, Zap, Shield, Flame } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const MAX_SECONDS = 10;
+type Difficulty = 'easy' | 'medium' | 'hard';
+
+const DIFFICULTY_CONFIG = {
+  easy: { time: 15, label: 'Easy', icon: Shield, color: 'text-green-500' },
+  medium: { time: 10, label: 'Medium', icon: Zap, color: 'text-amber-500' },
+  hard: { time: 5, label: 'Hard', icon: Flame, color: 'text-destructive' },
+};
 
 export function FlagGame() {
+  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [currentCountry, setCurrentCountry] = useState<typeof countries[0] | null>(null);
   const [options, setOptions] = useState<string[]>([]);
   const [gameState, setGameState] = useState<'playing' | 'answered' | 'finished'>('playing');
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(MAX_SECONDS);
+  const [timeLeft, setTimeLeft] = useState(DIFFICULTY_CONFIG.medium.time);
   const [hint, setHint] = useState<string | null>(null);
   const [hintLoading, setHintLoading] = useState(false);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const playSound = (type: 'correct' | 'incorrect' | 'click') => {
-    // Simple browser-safe visual feedback for sound placeholder as real sounds can be tricky with hydration
-    // Implementation can be added if audio assets are available
-  };
+  const maxSeconds = DIFFICULTY_CONFIG[difficulty].time;
 
   const generateQuestion = useCallback(() => {
     if (usedIndices.size >= countries.length) {
@@ -57,10 +62,14 @@ export function FlagGame() {
     setOptions(allOptions);
     setGameState('playing');
     setSelectedAnswer(null);
-    setTimeLeft(MAX_SECONDS);
+    setTimeLeft(DIFFICULTY_CONFIG[difficulty].time);
     setHint(null);
-    setUsedIndices(prev => new Set(prev).add(randomIndex));
-  }, [usedIndices]);
+    setUsedIndices(prev => {
+      const next = new Set(prev);
+      next.add(randomIndex);
+      return next;
+    });
+  }, [usedIndices, difficulty]);
 
   useEffect(() => {
     if (gameState === 'playing' && timeLeft > 0) {
@@ -87,9 +96,6 @@ export function FlagGame() {
 
     if (answer === currentCountry?.name) {
       setScore(prev => prev + 1);
-      playSound('correct');
-    } else {
-      playSound('incorrect');
     }
   };
 
@@ -100,7 +106,7 @@ export function FlagGame() {
       const result = await educationalHintGeneration({ countryName: currentCountry.name });
       setHint(result.hint);
     } catch (error) {
-      setHint("This country is located on a continent with rich cultural history.");
+      setHint("This country has a unique history and vibrant culture.");
     } finally {
       setHintLoading(false);
     }
@@ -110,14 +116,17 @@ export function FlagGame() {
     setScore(0);
     setTotalQuestions(0);
     setUsedIndices(new Set());
+    setGameState('playing');
     generateQuestion();
   };
 
   useEffect(() => {
-    generateQuestion();
-  }, []);
+    if (!currentCountry && usedIndices.size === 0) {
+      generateQuestion();
+    }
+  }, [generateQuestion, currentCountry, usedIndices.size]);
 
-  if (!currentCountry) return null;
+  if (!currentCountry && gameState !== 'finished') return null;
 
   if (gameState === 'finished') {
     return (
@@ -132,7 +141,7 @@ export function FlagGame() {
         <div className="grid grid-cols-2 gap-4 w-full mb-8">
           <div className="glass-dark p-4 rounded-2xl text-center">
             <p className="text-xs uppercase font-bold text-muted-foreground mb-1">Accuracy</p>
-            <p className="text-2xl font-black">{Math.round((score / totalQuestions) * 100)}%</p>
+            <p className="text-2xl font-black">{totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0}%</p>
           </div>
           <div className="glass-dark p-4 rounded-2xl text-center">
             <p className="text-xs uppercase font-bold text-muted-foreground mb-1">Flags Seen</p>
@@ -149,24 +158,44 @@ export function FlagGame() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
           <h1 className="text-xl font-black tracking-tighter uppercase">FlagMaster Quest</h1>
         </div>
+        
+        <Tabs 
+          value={difficulty} 
+          onValueChange={(v) => {
+            setDifficulty(v as Difficulty);
+            setUsedIndices(new Set()); // Restart session when difficulty changes
+            restartGame();
+          }}
+          className="w-full md:w-auto"
+        >
+          <TabsList className="grid grid-cols-3 glass-dark p-1 rounded-xl">
+            {(Object.entries(DIFFICULTY_CONFIG) as [Difficulty, typeof DIFFICULTY_CONFIG['easy']][]).map(([key, config]) => (
+              <TabsTrigger key={key} value={key} className="text-xs font-bold rounded-lg data-[state=active]:bg-white/80">
+                <config.icon className={cn("h-3 w-3 mr-1", config.color)} />
+                {config.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+
         <ScoreBoard score={score} total={totalQuestions} />
       </div>
 
       <div className="space-y-6">
         <FlagCard 
-          countryCode={currentCountry.code} 
-          isCorrect={gameState === 'answered' ? (selectedAnswer === currentCountry.name) : null}
+          countryCode={currentCountry?.code || 'aq'} 
+          isCorrect={gameState === 'answered' ? (selectedAnswer === currentCountry?.name) : null}
         />
 
         <div className="space-y-6 glass p-6 rounded-3xl">
           <Timer 
             seconds={timeLeft} 
-            maxSeconds={MAX_SECONDS} 
+            maxSeconds={maxSeconds} 
             onTimeUp={() => handleAnswer(null)} 
             isActive={gameState === 'playing'}
           />
@@ -180,15 +209,18 @@ export function FlagGame() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {options.map((option) => {
-              const isCorrect = option === currentCountry.name;
+              const isCorrect = option === currentCountry?.name;
               const isSelected = option === selectedAnswer;
               
-              let buttonStyle = "glass-dark hover:bg-white/60 border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl transition-all active:scale-95";
+              let buttonStyle = "glass-dark hover:bg-white/60 border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl transition-all active:scale-95 text-foreground";
               
               if (gameState === 'answered') {
                 if (isCorrect) buttonStyle = "bg-primary text-primary-foreground border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl ring-4 ring-primary/20";
                 else if (isSelected) buttonStyle = "bg-destructive text-destructive-foreground border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl opacity-80 ring-4 ring-destructive/20";
-                else buttonStyle = "glass-dark border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl opacity-40";
+                else buttonStyle = "glass-dark border-none justify-start text-left px-6 py-6 h-auto text-sm font-bold rounded-2xl opacity-40 text-foreground";
+              } else {
+                // Default playing state text color
+                buttonStyle = cn(buttonStyle, "text-primary hover:text-primary-foreground");
               }
 
               return (
