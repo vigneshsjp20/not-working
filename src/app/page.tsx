@@ -20,7 +20,7 @@ export default function Home() {
         </div>
 
         <footer className="mt-1 text-center shrink-0 animate-in fade-in duration-1000">
-          <p className="text-[7px] text-white/20 uppercase tracking-[0.1em] font-bold italic">Interactive AI Experience</p>
+          <p className="text-[7px] text-white/20 uppercase tracking-[0.1em] font-bold italic">Interactive Quest Experience</p>
         </footer>
       </div>
     </main>

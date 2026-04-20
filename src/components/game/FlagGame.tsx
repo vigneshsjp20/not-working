@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { countries } from "@/data/countries";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { countries, openers, CountryData } from "@/data/countries";
 import { FlagCard } from "./FlagCard";
 import { Timer } from "./Timer";
 import { ScoreBoard } from "./ScoreBoard";
 import { HintBox } from "./HintBox";
 import { Button } from "@/components/ui/button";
-import { educationalHintGeneration } from "@/ai/flows/educational-hint-generation";
 import { cn } from "@/lib/utils";
 import { RefreshCw, MapPin, CheckCircle2, XCircle, Zap, Shield, Flame, Play, Heart } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,7 +21,7 @@ const DIFFICULTY_CONFIG = {
 
 export function FlagGame() {
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
-  const [currentCountry, setCurrentCountry] = useState<typeof countries[0] | null>(null);
+  const [currentCountry, setCurrentCountry] = useState<CountryData | null>(null);
   const [options, setOptions] = useState<string[]>([]);
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'answered' | 'finished'>('idle');
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -31,9 +30,7 @@ export function FlagGame() {
   const [timeLeft, setTimeLeft] = useState(DIFFICULTY_CONFIG.medium.time);
   const [hint, setHint] = useState<string | null>(null);
   const [reward, setReward] = useState<string | null>(null);
-  const [hintLoading, setHintLoading] = useState(false);
   const [usedIndices, setUsedIndices] = useState<Set<string>>(new Set());
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const maxSeconds = DIFFICULTY_CONFIG[difficulty].time;
 
@@ -42,28 +39,13 @@ export function FlagGame() {
     return countries.filter(c => c.difficulty === level);
   }, [difficulty]);
 
-  const handleHint = useCallback(async (countryName: string) => {
-    setHintLoading(true);
-    try {
-      const result = await educationalHintGeneration({ countryName });
-      setHint(result.hint);
-      setReward(result.rewardSentence);
-    } catch (error) {
-      setHint("This country has a unique history and vibrant culture.");
-      setReward("Let's go explore this beautiful place together! ❤️");
-    } finally {
-      setHintLoading(false);
-    }
-  }, []);
-
   const generateQuestion = useCallback(() => {
     if (usedIndices.size >= filteredCountries.length) {
       setGameState('finished');
       return;
     }
 
-    let availableCountries = filteredCountries.filter(c => !usedIndices.has(c.code));
-    
+    const availableCountries = filteredCountries.filter(c => !usedIndices.has(c.code));
     const country = availableCountries[Math.floor(Math.random() * availableCountries.length)];
     
     const otherOptions: string[] = [];
@@ -76,13 +58,17 @@ export function FlagGame() {
 
     const allOptions = [country.name, ...otherOptions].sort(() => Math.random() - 0.5);
 
+    // Pick a random opener for the reward
+    const randomOpener = openers[Math.floor(Math.random() * openers.length)];
+    const fullReward = `${randomOpener.replace('✈️', '').replace('❤️', '').replace('🌍', '').replace('💕', '').replace('💖', '').replace('🌎', '').replace('✨', '').trim()}… Now let's ${country.activity} ❤️✈️`;
+
     setCurrentCountry(country);
     setOptions(allOptions);
     setGameState('playing');
     setSelectedAnswer(null);
     setTimeLeft(DIFFICULTY_CONFIG[difficulty].time);
-    setHint(null);
-    setReward(null);
+    setHint(country.hint);
+    setReward(fullReward);
     setUsedIndices(prev => {
       const next = new Set(prev);
       next.add(country.code);
@@ -98,29 +84,19 @@ export function FlagGame() {
   };
 
   useEffect(() => {
-    if (currentCountry && gameState === 'playing' && !hint && !hintLoading) {
-      handleHint(currentCountry.name);
-    }
-  }, [currentCountry, gameState, hint, hintLoading, handleHint]);
-
-  useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (gameState === 'playing' && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
+      timer = setInterval(() => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
     } else if (timeLeft === 0 && gameState === 'playing') {
       handleAnswer(null);
     }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    return () => clearInterval(timer);
   }, [timeLeft, gameState]);
 
   const handleAnswer = (answer: string | null) => {
     if (gameState !== 'playing') return;
-
-    if (timerRef.current) clearInterval(timerRef.current);
     
     setSelectedAnswer(answer);
     setGameState('answered');
@@ -207,8 +183,8 @@ export function FlagGame() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-1.5 md:space-y-8 animate-in fade-in duration-500 px-1 overflow-hidden flex flex-col justify-center">
-      <div className="flex flex-row justify-between items-center gap-2 px-1 mb-0.5">
+    <div className="w-full h-full max-w-2xl mx-auto flex flex-col justify-center gap-1.5 md:gap-6 animate-in fade-in duration-500 overflow-hidden px-1">
+      <div className="flex flex-row justify-between items-center px-1 shrink-0">
         <div className="flex items-center gap-1">
           <MapPin className="h-3 w-3 md:h-5 md:w-5 text-primary" />
           <h1 className="text-[10px] md:text-xl font-black tracking-tighter uppercase whitespace-nowrap">FlagMaster Quest</h1>
@@ -216,14 +192,14 @@ export function FlagGame() {
         <ScoreBoard score={score} total={totalQuestions} />
       </div>
 
-      <div className="space-y-1.5 md:space-y-6">
+      <div className="flex-1 flex flex-col justify-center min-h-0 gap-1.5 md:gap-6">
         <FlagCard 
           countryCode={currentCountry?.code || 'aq'} 
           isCorrect={gameState === 'answered' ? (selectedAnswer === currentCountry?.name) : null}
-          className="p-1 md:p-4"
+          className="p-1 md:p-4 shrink-0"
         />
 
-        <div className="space-y-1.5 md:space-y-6 glass p-2 md:p-6 rounded-[1.5rem] md:rounded-[2.5rem] border-white/50">
+        <div className="space-y-1.5 md:space-y-6 glass p-2 md:p-6 rounded-[1.5rem] md:rounded-[2.5rem] border-white/50 overflow-hidden flex flex-col justify-center">
           <Timer 
             seconds={timeLeft} 
             maxSeconds={maxSeconds} 
@@ -233,12 +209,12 @@ export function FlagGame() {
 
           <HintBox 
             hint={hint} 
-            loading={hintLoading} 
-            onGetHint={() => currentCountry && handleHint(currentCountry.name)} 
+            loading={false} 
+            onGetHint={() => {}} 
             disabled={gameState !== 'playing'} 
           />
 
-          <div className="grid grid-cols-2 gap-1.5 md:gap-3">
+          <div className="grid grid-cols-2 gap-1.5 md:gap-3 shrink-0">
             {options.map((option) => {
               const isCorrect = option === currentCountry?.name;
               const isSelected = option === selectedAnswer;
@@ -269,7 +245,7 @@ export function FlagGame() {
           </div>
 
           {gameState === 'answered' && (
-            <div className="space-y-1.5 md:space-y-4 animate-in slide-in-from-bottom-2">
+            <div className="space-y-1.5 md:space-y-4 animate-in slide-in-from-bottom-2 shrink-0">
               {selectedAnswer === currentCountry?.name && reward && (
                 <div className="p-2 md:p-5 glass border-primary/30 bg-primary/5 rounded-xl md:rounded-2xl text-center space-y-0.5 md:space-y-2">
                   <div className="flex items-center justify-center gap-1 text-primary">
