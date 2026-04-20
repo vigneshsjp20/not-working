@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface FlagCardProps {
@@ -10,22 +9,22 @@ interface FlagCardProps {
 }
 
 export function FlagCard({ countryCode, className, isCorrect }: FlagCardProps) {
+  // Using a standard img tag for maximum compatibility on static hosting like GitHub Pages
   const flagUrl = `https://flagcdn.com/w640/${countryCode.toLowerCase()}.png`;
 
   return (
     <div className={cn(
-      "glass p-1 sm:p-4 rounded-[1.5rem] md:rounded-[2rem] transition-all duration-300 relative overflow-hidden flex items-center justify-center mx-auto",
+      "glass p-1 sm:p-4 rounded-[1.5rem] md:rounded-[2rem] transition-all duration-300 relative overflow-hidden flex items-center justify-center mx-auto w-full",
       isCorrect === true && "ring-4 ring-primary shadow-primary/20",
       isCorrect === false && "animate-shake ring-4 ring-destructive shadow-destructive/20",
       className
     )}>
-      <div className="relative aspect-[3/2] w-full max-w-[140px] sm:max-w-md shadow-2xl rounded-lg sm:rounded-xl overflow-hidden border-2 sm:border-4 border-white/50">
-        <Image
+      <div className="relative aspect-[3/2] w-full max-w-[280px] sm:max-w-md shadow-2xl rounded-lg sm:rounded-xl overflow-hidden border-2 sm:border-4 border-white/50 bg-white/10">
+        <img
           src={flagUrl}
           alt="Country Flag"
-          fill
-          className="object-cover"
-          priority
+          className="w-full h-full object-cover"
+          loading="eager"
         />
       </div>
     </div>

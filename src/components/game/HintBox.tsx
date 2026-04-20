@@ -12,25 +12,25 @@ interface HintBoxProps {
 
 export function HintBox({ hint, loading, onGetHint, disabled }: HintBoxProps) {
   return (
-    <div className="w-full min-h-[36px] md:min-h-[80px] flex items-center justify-center">
+    <div className="w-full min-h-[50px] flex items-center justify-center">
       {loading ? (
-        <div className="flex items-center gap-2 glass-dark px-3 py-1.5 md:px-6 md:py-4 rounded-xl md:rounded-2xl text-secondary-foreground/60 animate-pulse w-full">
-          <Loader2 className="h-2.5 w-2.5 md:h-5 md:w-5 animate-spin text-primary shrink-0" />
-          <span className="text-[9px] md:text-sm font-medium">Generating insight...</span>
+        <div className="flex items-center gap-2 glass-dark px-4 py-3 rounded-xl text-secondary-foreground/60 animate-pulse w-full">
+          <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+          <span className="text-xs font-medium">Generating insight...</span>
         </div>
       ) : hint ? (
-        <div className="glass p-2 md:p-5 rounded-xl md:rounded-2xl border-secondary/30 bg-secondary/10 animate-in fade-in slide-in-from-top-1 w-full">
-          <div className="flex items-center gap-1 mb-0.5 md:mb-2">
-            <Sparkles className="h-2 w-2 md:h-4 md:w-4 text-secondary-foreground shrink-0" />
-            <span className="text-[7px] md:text-[10px] font-bold uppercase tracking-widest text-secondary-foreground/70">Global Insight</span>
+        <div className="glass p-3 rounded-xl border-secondary/30 bg-secondary/10 animate-in fade-in slide-in-from-top-1 w-full">
+          <div className="flex items-center gap-1 mb-1">
+            <Sparkles className="h-3 w-3 text-secondary-foreground shrink-0" />
+            <span className="text-[8px] font-bold uppercase tracking-widest text-secondary-foreground/70">Global Insight</span>
           </div>
-          <p className="text-[9px] md:text-sm italic font-medium leading-tight md:leading-relaxed text-secondary-foreground px-1">
+          <p className="text-[11px] italic font-medium leading-tight text-secondary-foreground px-1 line-clamp-3">
             &ldquo;{hint}&rdquo;
           </p>
         </div>
       ) : (
-        <div className="w-full h-full min-h-[36px] border-2 border-dashed border-secondary/20 rounded-xl md:rounded-2xl flex items-center justify-center">
-          <p className="text-[7px] text-secondary-foreground/40 font-bold uppercase tracking-widest">Awaiting Hint...</p>
+        <div className="w-full h-full min-h-[50px] border-2 border-dashed border-secondary/20 rounded-xl flex items-center justify-center">
+          <p className="text-[8px] text-secondary-foreground/40 font-bold uppercase tracking-widest">Awaiting Hint...</p>
         </div>
       )}
     </div>

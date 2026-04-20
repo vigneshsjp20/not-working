@@ -2,25 +2,25 @@ import { FlagGame } from "@/components/game/FlagGame";
 
 export default function Home() {
   return (
-    <main className="fixed inset-0 h-[100svh] w-full bg-black text-white flex flex-col items-center justify-center overflow-hidden touch-none selection:bg-primary selection:text-primary-foreground">
+    <main className="fixed inset-0 h-[100svh] w-full bg-black text-white flex flex-col items-center overflow-hidden touch-none selection:bg-primary selection:text-primary-foreground">
       {/* Background Decorative Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-full h-1/2 bg-primary/10 blur-[120px] pointer-events-none -z-10 animate-pulse" style={{ animationDuration: '4s' }} />
       <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-secondary/10 rounded-full blur-[100px] pointer-events-none -z-10" />
 
-      <div className="w-full h-full max-w-md mx-auto relative flex flex-col p-2 md:p-6 overflow-hidden">
-        <header className="text-center mb-1 shrink-0 animate-in fade-in slide-in-from-top-4 duration-700">
-          <h1 className="text-lg md:text-3xl font-black tracking-tighter">
+      <div className="w-full h-full max-w-md mx-auto relative flex flex-col p-3 md:p-6 overflow-hidden">
+        <header className="text-center mb-2 shrink-0 animate-in fade-in slide-in-from-top-4 duration-700">
+          <h1 className="text-xl md:text-3xl font-black tracking-tighter">
             FLAGMASTER <span className="text-primary underline decoration-accent/50 decoration-4 underline-offset-2">QUEST</span> 🌍
           </h1>
-          <p className="text-[8px] text-muted-foreground uppercase tracking-[0.2em] font-bold mt-0.5">Adventure with Ree ❤️</p>
+          <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] font-bold mt-1">Adventure with Ree ❤️</p>
         </header>
 
-        <div className="flex-1 flex flex-col justify-center min-h-0 relative z-10 overflow-hidden">
+        <div className="flex-1 relative z-10 overflow-hidden">
           <FlagGame />
         </div>
 
-        <footer className="mt-1 text-center shrink-0 animate-in fade-in duration-1000">
-          <p className="text-[7px] text-white/20 uppercase tracking-[0.1em] font-bold italic">Interactive Quest Experience</p>
+        <footer className="mt-2 text-center shrink-0 animate-in fade-in duration-1000">
+          <p className="text-[8px] text-white/20 uppercase tracking-[0.1em] font-bold italic">Interactive Quest Experience</p>
         </footer>
       </div>
     </main>
